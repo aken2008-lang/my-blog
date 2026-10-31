@@ -1,0 +1,61 @@
+
+media:
+  - name: images
+    label: 图片
+    input: public/images
+    output: /images
+    extensions: [jpg, jpeg, png, webp, gif, svg]
+
+content:
+  - name: posts
+    label: 博客文章
+    type: collection
+    path: src/content/posts
+    filename: "{primary}.md"
+    view:
+      fields: [title, published, category, draft]
+      primary: title
+      sort: [published, desc]
+    fields:
+      - name: title
+        label: 文章标题
+        type: string
+        required: true
+
+      - name: published
+        label: 发布日期
+        type: date
+        options:
+          format: yyyy-MM-dd
+
+      - name: description
+        label: 文章摘要
+        type: text
+
+      - name: image
+        label: 封面图片
+        type: image
+        options:
+          media: images
+          path: public/images
+
+      - name: tags
+        label: 标签
+        type: string
+        list: true
+
+      - name: category
+        label: 分类
+        type: string
+
+      - name: draft
+        label: 草稿
+        type: boolean
+
+      - name: lang
+        label: 文章语言
+        type: string
+
+      - name: body
+        label: 正文
+        type: rich-text
