@@ -12,12 +12,14 @@ content:
     type: collection
     path: src/content/posts
     filename:
-  template: "{primary}.md"
-  field: create
+      template: "{primary}.md"
+      field: create
+
     view:
       fields: [title, published, category, draft]
       primary: title
       sort: [published, desc]
+
     fields:
       - name: title
         label: 文章标题
