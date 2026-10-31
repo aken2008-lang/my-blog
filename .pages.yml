@@ -11,7 +11,9 @@ content:
     label: 博客文章
     type: collection
     path: src/content/posts
-    filename: "{primary}.md"
+    filename:
+  template: "{primary}.md"
+  field: create
     view:
       fields: [title, published, category, draft]
       primary: title
