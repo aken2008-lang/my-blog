@@ -2,6 +2,7 @@
 title: 婚姻无效&婚姻可撤销
 published: 2026-11-02
 description: 什么时候婚姻无效？什么时候婚姻可撤销？它们的行权主体分别是谁
+category: 民法
 draft: false
 ---
 # 一、婚姻无效（《民法典》第 1051 条）
