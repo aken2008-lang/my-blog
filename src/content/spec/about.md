@@ -52,6 +52,40 @@ description: Aken的个人主页与学习进度
     color: #2c3e50;
   }
 
+  /* 科目进度条样式 */
+  .subject-item {
+    margin-bottom: 15px;
+  }
+  .subject-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #333;
+    font-weight: bold;
+  }
+  .progress-bar-bg {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+  }
+  .progress-bar-fill {
+    background: linear-gradient(90deg, #2980b9, #27ae60);
+    height: 100%;
+    width: 0%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+  .progress-tip {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+    text-align: right;
+  }
+
   /* Todo List 样式 */
   .todo-input-group {
     display: flex;
@@ -180,7 +214,7 @@ description: Aken的个人主页与学习进度
   </div>
 </div>
 
-<!-- 新增：法考打卡日历卡片 -->
+<!-- 法考打卡日历卡片 -->
 <div class="custom-card">
   <div class="calendar-header">
     <h3 id="calendar-month-title" style="margin: 0;">📅 法考复习打卡日历</h3>
@@ -188,7 +222,6 @@ description: Aken的个人主页与学习进度
   </div>
   <p style="font-size: 13px; color: #666; margin-top: 0;">点击当天的日期格子即可打卡/取消打卡（打卡记录将同步保存在本地）</p>
   <div class="calendar-grid" id="calendar-grid">
-    <!-- 星期表头 -->
     <div class="calendar-day-head">日</div>
     <div class="calendar-day-head">一</div>
     <div class="calendar-day-head">二</div>
@@ -196,11 +229,20 @@ description: Aken的个人主页与学习进度
     <div class="calendar-day-head">四</div>
     <div class="calendar-day-head">五</div>
     <div class="calendar-day-head">六</div>
-    <!-- 日期格子由 JS 动态生成 -->
   </div>
 </div>
 
-<!-- 待办事项卡片 -->
+<!-- 法考科目攻克进度条 -->
+<div class="custom-card">
+  <h3>📊 法考科目复习进度</h3>
+  <p class="progress-tip">💡 提示：点击进度条任意位置可快速调整该科目的掌握百分比，数据会自动保存！</p>
+  
+  <div id="progress-container">
+    <!-- JS 动态生成科目进度条 -->
+  </div>
+</div>
+
+<!-- 待办事项卡片（已调整到最后） -->
 <div class="custom-card">
   <h3>📝 我的待办事项（法考/学习进度）</h3>
   
@@ -210,7 +252,6 @@ description: Aken的个人主页与学习进度
   </div>
 
   <ul id="todo-list" class="todo-list">
-    <!-- JS 会动态把 <li> 放到这里 -->
   </ul>
 </div>
 
@@ -242,64 +283,106 @@ description: Aken的个人主页与学习进度
   updateCountdown();
   setInterval(updateCountdown, 1000);
 
-  // 2. 打卡日历核心逻辑
+  // 2. 科目进度条逻辑
+  const defaultSubjects = [
+    { name: "刑法", progress: 30 },
+    { name: "民法", progress: 40 },
+    { name: "行政法与行政诉讼法", progress: 20 },
+    { name: "刑诉法", progress: 15 },
+    { name: "民诉法与仲裁", progress: 10 },
+    { name: "商经知", progress: 10 },
+    { name: "理论法", progress: 25 },
+    { name: "三国法", progress: 10 }
+  ];
+
+  let subjects = JSON.parse(localStorage.getItem('law_exam_progress')) || defaultSubjects;
+  const progressContainer = document.getElementById('progress-container');
+
+  function renderProgressBars() {
+    if (!progressContainer) return;
+    progressContainer.innerHTML = '';
+
+    subjects.forEach((sub, index) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'subject-item';
+      itemDiv.innerHTML = `
+        <div class="subject-info">
+          <span>${sub.name}</span>
+          <span>${sub.progress}%</span>
+        </div>
+        <div class="progress-bar-bg" data-index="${index}" title="点击进度条可直接设定百分比">
+          <div class="progress-bar-fill" style="width: ${sub.progress}%;"></div>
+        </div>
+      `;
+
+      const bg = itemDiv.querySelector('.progress-bar-bg');
+      bg.addEventListener('click', function(e) {
+        const rect = bg.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const width = rect.width;
+        let percentage = Math.round((clickX / width) * 100);
+        
+        if (percentage < 0) percentage = 0;
+        if (percentage > 100) percentage = 100;
+
+        subjects[index].progress = percentage;
+        localStorage.setItem('law_exam_progress', JSON.stringify(subjects));
+        renderProgressBars();
+      });
+
+      progressContainer.appendChild(itemDiv);
+    });
+  }
+  renderProgressBars();
+
+  // 3. 打卡日历逻辑
   const calendarGrid = document.getElementById('calendar-grid');
   const monthTitle = document.getElementById('calendar-month-title');
   const totalChecksEl = document.getElementById('total-checks');
 
-  // 读取已打卡的日期数组（格式如：["2026-11-05", "2026-11-06"]）
   let checkIns = JSON.parse(localStorage.getItem('law_exam_checkins')) || [];
 
   function renderCalendar() {
     const now = new Date();
     const year = now.getFullYear();
-    const month = now.getMonth(); // 0 - 11
+    const month = now.getMonth(); 
     const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     if (monthTitle) {
       monthTitle.textContent = `📅 ${year}年${month + 1}月 法考打卡日历`;
     }
 
-    // 保留星期表头，清空后面的日期格子
     const dayHeads = Array.from(calendarGrid.querySelectorAll('.calendar-day-head'));
     calendarGrid.innerHTML = '';
     dayHeads.forEach(head => calendarGrid.appendChild(head));
 
-    // 计算当月第一天是星期几 & 当月共有多少天
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
 
-    // 填充当月第一天之前的空白格子
     for (let i = 0; i < firstDayIndex; i++) {
       const emptyDiv = document.createElement('div');
       emptyDiv.className = 'calendar-day empty';
       calendarGrid.appendChild(emptyDiv);
     }
 
-    // 生成日期格子
     for (let d = 1; d <= totalDays; d++) {
       const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const dayDiv = document.createElement('div');
       dayDiv.className = 'calendar-day';
       dayDiv.textContent = d;
 
-      // 标记今天
       if (dayStr === todayStr) {
         dayDiv.classList.add('today');
       }
 
-      // 标记已打卡
       if (checkIns.includes(dayStr)) {
         dayDiv.classList.add('checked');
       }
 
-      // 点击切换打卡状态
       dayDiv.addEventListener('click', function() {
         if (checkIns.includes(dayStr)) {
-          // 如果已打卡，取消打卡
           checkIns = checkIns.filter(item => item !== dayStr);
         } else {
-          // 未打卡，添加打卡记录
           checkIns.push(dayStr);
         }
         localStorage.setItem('law_exam_checkins', JSON.stringify(checkIns));
@@ -318,7 +401,7 @@ description: Aken的个人主页与学习进度
     renderCalendar();
   }
 
-  // 3. Todo List 逻辑
+  // 4. Todo List 逻辑
   const todoInput = document.getElementById('todo-input');
   const addBtn = document.getElementById('add-btn');
   const todoList = document.getElementById('todo-list');
