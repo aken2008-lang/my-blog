@@ -255,211 +255,238 @@ description: Aken的个人主页与学习进度
   </ul>
 </div>
 
-<!-- 3. JavaScript 交互逻辑 -->
+<!-- 3. JavaScript 交互逻辑（已适配现代博客无刷新跳转） -->
 <script>
-  // 1. 法考倒计时逻辑
-  function updateCountdown() {
-    const targetDate = new Date('2027-09-19T00:00:00').getTime();
-    const now = new Date().getTime();
-    const timeLeft = targetDate - now;
+  // 把所有的初始化逻辑封装成一个函数
+  function initDashboard() {
+    // 1. 法考倒计时逻辑
+    function updateCountdown() {
+      const targetDate = new Date('2027-09-19T00:00:00').getTime();
+      const now = new Date().getTime();
+      const timeLeft = targetDate - now;
 
-    if (timeLeft > 0) {
-      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      if (timeLeft > 0) {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-      const dEl = document.getElementById('days');
-      const hEl = document.getElementById('hours');
-      const mEl = document.getElementById('minutes');
-      const sEl = document.getElementById('seconds');
+        const dEl = document.getElementById('days');
+        const hEl = document.getElementById('hours');
+        const mEl = document.getElementById('minutes');
+        const sEl = document.getElementById('seconds');
 
-      if (dEl) dEl.textContent = days;
-      if (hEl) hEl.textContent = String(hours).padStart(2, '0');
-      if (mEl) mEl.textContent = String(minutes).padStart(2, '0');
-      if (sEl) sEl.textContent = String(seconds).padStart(2, '0');
+        if (dEl) dEl.textContent = days;
+        if (hEl) hEl.textContent = String(hours).padStart(2, '0');
+        if (mEl) mEl.textContent = String(minutes).padStart(2, '0');
+        if (sEl) sEl.textContent = String(seconds).padStart(2, '0');
+      }
     }
-  }
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+    updateCountdown();
 
-  // 2. 科目进度条逻辑
-  const defaultSubjects = [
-    { name: "刑法", progress: 30 },
-    { name: "民法", progress: 40 },
-    { name: "行政法与行政诉讼法", progress: 20 },
-    { name: "刑诉法", progress: 15 },
-    { name: "民诉法与仲裁", progress: 10 },
-    { name: "商经知", progress: 10 },
-    { name: "理论法", progress: 25 },
-    { name: "三国法", progress: 10 }
-  ];
+    // 2. 科目进度条逻辑
+    const defaultSubjects = [
+      { name: "刑法", progress: 30 },
+      { name: "民法", progress: 40 },
+      { name: "行政法与行政诉讼法", progress: 20 },
+      { name: "刑诉法", progress: 15 },
+      { name: "民诉法与仲裁", progress: 10 },
+      { name: "商经知", progress: 10 },
+      { name: "理论法", progress: 25 },
+      { name: "三国法", progress: 10 }
+    ];
 
-  let subjects = JSON.parse(localStorage.getItem('law_exam_progress')) || defaultSubjects;
-  const progressContainer = document.getElementById('progress-container');
+    let subjects = JSON.parse(localStorage.getItem('law_exam_progress')) || defaultSubjects;
+    const progressContainer = document.getElementById('progress-container');
 
-  function renderProgressBars() {
-    if (!progressContainer) return;
-    progressContainer.innerHTML = '';
+    function renderProgressBars() {
+      if (!progressContainer) return;
+      progressContainer.innerHTML = '';
 
-    subjects.forEach((sub, index) => {
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'subject-item';
-      itemDiv.innerHTML = `
-        <div class="subject-info">
-          <span>${sub.name}</span>
-          <span>${sub.progress}%</span>
-        </div>
-        <div class="progress-bar-bg" data-index="${index}" title="点击进度条可直接设定百分比">
-          <div class="progress-bar-fill" style="width: ${sub.progress}%;"></div>
-        </div>
-      `;
+      subjects.forEach((sub, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'subject-item';
+        itemDiv.innerHTML = `
+          <div class="subject-info">
+            <span>${sub.name}</span>
+            <span>${sub.progress}%</span>
+          </div>
+          <div class="progress-bar-bg" data-index="${index}" title="点击进度条可直接设定百分比">
+            <div class="progress-bar-fill" style="width: ${sub.progress}%;"></div>
+          </div>
+        `;
 
-      const bg = itemDiv.querySelector('.progress-bar-bg');
-      bg.addEventListener('click', function(e) {
-        const rect = bg.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const width = rect.width;
-        let percentage = Math.round((clickX / width) * 100);
-        
-        if (percentage < 0) percentage = 0;
-        if (percentage > 100) percentage = 100;
+        const bg = itemDiv.querySelector('.progress-bar-bg');
+        bg.addEventListener('click', function(e) {
+          const rect = bg.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const width = rect.width;
+          let percentage = Math.round((clickX / width) * 100);
+          
+          if (percentage < 0) percentage = 0;
+          if (percentage > 100) percentage = 100;
 
-        subjects[index].progress = percentage;
-        localStorage.setItem('law_exam_progress', JSON.stringify(subjects));
-        renderProgressBars();
+          subjects[index].progress = percentage;
+          localStorage.setItem('law_exam_progress', JSON.stringify(subjects));
+          renderProgressBars();
+        });
+
+        progressContainer.appendChild(itemDiv);
       });
-
-      progressContainer.appendChild(itemDiv);
-    });
-  }
-  renderProgressBars();
-
-  // 3. 打卡日历逻辑
-  const calendarGrid = document.getElementById('calendar-grid');
-  const monthTitle = document.getElementById('calendar-month-title');
-  const totalChecksEl = document.getElementById('total-checks');
-
-  let checkIns = JSON.parse(localStorage.getItem('law_exam_checkins')) || [];
-
-  function renderCalendar() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); 
-    const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    if (monthTitle) {
-      monthTitle.textContent = `📅 ${year}年${month + 1}月 法考打卡日历`;
     }
+    renderProgressBars();
 
-    const dayHeads = Array.from(calendarGrid.querySelectorAll('.calendar-day-head'));
-    calendarGrid.innerHTML = '';
-    dayHeads.forEach(head => calendarGrid.appendChild(head));
+    // 3. 打卡日历逻辑
+    const calendarGrid = document.getElementById('calendar-grid');
+    const monthTitle = document.getElementById('calendar-month-title');
+    const totalChecksEl = document.getElementById('total-checks');
 
-    const firstDayIndex = new Date(year, month, 1).getDay();
-    const totalDays = new Date(year, month + 1, 0).getDate();
+    let checkIns = JSON.parse(localStorage.getItem('law_exam_checkins')) || [];
 
-    for (let i = 0; i < firstDayIndex; i++) {
-      const emptyDiv = document.createElement('div');
-      emptyDiv.className = 'calendar-day empty';
-      calendarGrid.appendChild(emptyDiv);
-    }
+    function renderCalendar() {
+      if (!calendarGrid) return;
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth(); 
+      const todayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-    for (let d = 1; d <= totalDays; d++) {
-      const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayDiv = document.createElement('div');
-      dayDiv.className = 'calendar-day';
-      dayDiv.textContent = d;
-
-      if (dayStr === todayStr) {
-        dayDiv.classList.add('today');
+      if (monthTitle) {
+        monthTitle.textContent = `📅 ${year}年${month + 1}月 法考打卡日历`;
       }
 
-      if (checkIns.includes(dayStr)) {
-        dayDiv.classList.add('checked');
+      const dayHeads = Array.from(calendarGrid.querySelectorAll('.calendar-day-head'));
+      calendarGrid.innerHTML = '';
+      dayHeads.forEach(head => calendarGrid.appendChild(head));
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptyDiv);
       }
 
-      dayDiv.addEventListener('click', function() {
-        if (checkIns.includes(dayStr)) {
-          checkIns = checkIns.filter(item => item !== dayStr);
-        } else {
-          checkIns.push(dayStr);
+      for (let d = 1; d <= totalDays; d++) {
+        const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        dayDiv.textContent = d;
+
+        if (dayStr === todayStr) {
+          dayDiv.classList.add('today');
         }
-        localStorage.setItem('law_exam_checkins', JSON.stringify(checkIns));
-        renderCalendar();
-      });
 
-      calendarGrid.appendChild(dayDiv);
+        if (checkIns.includes(dayStr)) {
+          dayDiv.classList.add('checked');
+        }
+
+        dayDiv.addEventListener('click', function() {
+          if (checkIns.includes(dayStr)) {
+            checkIns = checkIns.filter(item => item !== dayStr);
+          } else {
+            checkIns.push(dayStr);
+          }
+          localStorage.setItem('law_exam_checkins', JSON.stringify(checkIns));
+          renderCalendar();
+        });
+
+        calendarGrid.appendChild(dayDiv);
+      }
+
+      if (totalChecksEl) {
+        totalChecksEl.textContent = checkIns.length;
+      }
     }
-
-    if (totalChecksEl) {
-      totalChecksEl.textContent = checkIns.length;
-    }
-  }
-
-  if (calendarGrid) {
     renderCalendar();
-  }
 
-  // 4. Todo List 逻辑
-  const todoInput = document.getElementById('todo-input');
-  const addBtn = document.getElementById('add-btn');
-  const todoList = document.getElementById('todo-list');
+    // 4. Todo List 逻辑
+    const todoInput = document.getElementById('todo-input');
+    const addBtn = document.getElementById('add-btn');
+    const todoList = document.getElementById('todo-list');
 
-  let todos = JSON.parse(localStorage.getItem('my_todos')) || [];
+    let todos = JSON.parse(localStorage.getItem('my_todos')) || [];
 
-  function renderTodos() {
-    if (!todoList) return;
-    todoList.innerHTML = '';
+    function renderTodos() {
+      if (!todoList) return;
+      todoList.innerHTML = '';
 
-    todos.forEach(function(todo, index) {
-      const li = document.createElement('li');
-      li.className = 'todo-item';
-      if (todo.completed) {
-        li.classList.add('completed');
-      }
+      todos.forEach(function(todo, index) {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        if (todo.completed) {
+          li.classList.add('completed');
+        }
 
-      li.innerHTML = `
-        <span>${todo.text}</span>
-        <button class="delete-btn">删除</button>
-      `;
+        li.innerHTML = `
+          <span>${todo.text}</span>
+          <button class="delete-btn">删除</button>
+        `;
 
-      li.querySelector('span').addEventListener('click', function() {
-        todos[index].completed = !todos[index].completed;
-        saveAndRenderTodos();
+        li.querySelector('span').addEventListener('click', function() {
+          todos[index].completed = !todos[index].completed;
+          saveAndRenderTodos();
+        });
+
+        li.querySelector('.delete-btn').addEventListener('click', function() {
+          todos.splice(index, 1);
+          saveAndRenderTodos();
+        });
+
+        todoList.appendChild(li);
       });
+    }
 
-      li.querySelector('.delete-btn').addEventListener('click', function() {
-        todos.splice(index, 1);
-        saveAndRenderTodos();
-      });
+    function saveAndRenderTodos() {
+      localStorage.setItem('my_todos', JSON.stringify(todos));
+      renderTodos();
+    }
 
-      todoList.appendChild(li);
-    });
-  }
-
-  function saveAndRenderTodos() {
-    localStorage.setItem('my_todos', JSON.stringify(todos));
     renderTodos();
-  }
 
-  renderTodos();
+    if (addBtn && !addBtn.dataset.bound) {
+      addBtn.dataset.bound = 'true'; // 防止重复绑定事件
+      addBtn.addEventListener('click', function() {
+        const text = todoInput.value.trim(); 
+        if (text === '') {
+          alert('请输入待办内容！');
+          return;
+        }
 
-  if (addBtn) {
-    addBtn.addEventListener('click', function() {
-      const text = todoInput.value.trim(); 
-      if (text === '') {
-        alert('请输入待办内容！');
-        return;
-      }
+        todos.push({
+          text: text,
+          completed: false
+        });
 
-      todos.push({
-        text: text,
-        completed: false
+        todoInput.value = '';
+        saveAndRenderTodos();
       });
-
-      todoInput.value = '';
-      saveAndRenderTodos();
-    });
+    }
   }
+
+  // 关键：同时监听普通加载和 Astro 的无刷新页面切换事件 (astro:page-load)
+  document.addEventListener('DOMContentLoaded', initDashboard);
+  document.addEventListener('astro:page-load', initDashboard);
+
+  // 每秒刷新一次倒计时
+  setInterval(function() {
+    const dEl = document.getElementById('days');
+    if (dEl) {
+      // 仅当倒计时元素存在时更新，减少不必要的计算
+      const targetDate = new Date('2027-09-19T00:00:00').getTime();
+      const now = new Date().getTime();
+      const timeLeft = targetDate - now;
+      if (timeLeft > 0) {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        if(document.getElementById('days')) document.getElementById('days').textContent = days;
+        if(document.getElementById('hours')) document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+        if(document.getElementById('minutes')) document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+        if(document.getElementById('seconds')) document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+      }
+    }
+  }, 1000);
 </script>
