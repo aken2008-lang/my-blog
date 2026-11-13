@@ -45,8 +45,18 @@ export const navBarConfig: NavBarConfig = {
 		LinkPreset.Archive,
 		LinkPreset.About,
 		{
+      name: "新闻",
+      url: "https://news.1361366.xyz",   // 换成实际网址
+      external: true,                 // 外部链接必须写 true
+    },
+    {
+      name: "音乐",
+      url: "https://music.1361366.xyz",   // 换成实际网址
+      external: true,
+    },
+		{
 			name: "GitHub",
-			url: "https://github.com/saicaca/fuwari", // Internal links should not include the base path, as it is automatically added
+			url: "https://github.com", // Internal links should not include the base path, as it is automatically added
 			external: true, // Show an external link icon and will open in a new tab
 		},
 	],
